@@ -35,7 +35,11 @@
     const ec = $('pmExamChips');
     ec.innerHTML = '';
     if (!PM.exams.length) {
-      ec.appendChild(el('div', 'empty-msg', '午後のデータがまだありません。'));
+      // 初回は40MB超を取りに行くので、取得中と本当に無いときを区別して出す
+      ec.appendChild(el('div', 'empty-msg', PM.syncState && PM.syncState.error
+        ? '午後データを読み込めませんでした（' + PM.syncState.error + '）'
+        : '午後データを読み込んでいます。40MB ほどあるので、初回は少し時間がかかります。'
+          + '読み込みが終わると自動で表示されます。'));
       $('pmSectionList').innerHTML = '';
       $('pmPickHint').textContent = '';
       return;
