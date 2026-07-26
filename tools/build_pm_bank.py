@@ -39,6 +39,7 @@ except ImportError:
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pm_sections import code_from_label, name as sec_name  # noqa: E402
+from sw_cache import stamp_sw  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "work"
@@ -263,14 +264,7 @@ def main() -> int:
 
     # Service Worker のキャッシュ名を変える。ここを変えないと端末が古い
     # index.html や js を使い続け、データだけ新しいという状態になる。
-    # 午前・午後どちらのビルドでも変わればよいので、それぞれ自分の stamp を書く。
-    sw = ROOT / "app" / "sw.js"
-    if sw.exists():
-        src = sw.read_text(encoding="utf-8")
-        new = re.sub(r"const CACHE = '[^']*';",
-                     f"const CACHE = 'ap-study-pm{payload['stamp']}';", src, count=1)
-        if new != src:
-            sw.write_text(new, encoding="utf-8")
+    cache = stamp_sw(ROOT / "app", payload["stamp"])
 
     L = ["# 午後 問題バンク レポート", "",
          f"生成 {payload['generated']}", "",
@@ -288,6 +282,7 @@ def main() -> int:
     print(f"\n  app/data/pm.json  {mb:.1f} MB  ({len(sections)} 大問 / {len(exams)} 回)")
     print(f"  app/data/pm-version.json  stamp={payload['stamp']}")
     print(f"  tools/pm_build_report.md  要対応 {len(issues)} 大問 / 参考 {len(logs)} 大問")
+    print(f"  app/sw.js  CACHE={cache}")
     return 0
 
 

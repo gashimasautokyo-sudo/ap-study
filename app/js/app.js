@@ -838,16 +838,25 @@
   // 午後モジュールから画面遷移を呼べるようにする
   window.AppHooks = { show: show, toast: toast };
 
+  // 操作できるようにするのを先に済ませる。データの取得を待ってから wire すると、
+  // 初回は数十MBのダウンロードが終わるまでタブすら切り替えられない。
+  wire();
+  if (window.PMUI) PMUI.wire();
+  show('home');
+
+  // 解答中・採点中に描き直すと入力や進行が飛ぶので、一覧系の画面だけ描き直す
+  const REDRAWABLE = { home: 1, setup: 1, pm: 1, review: 1, stats: 1, settings: 1 };
+  function redraw() { if (REDRAWABLE[UI.tab]) show(UI.tab); }
+
   Store.init()
     .then(function () { return Quiz.restore(); })
-    .then(function () { return window.PM ? PM.init().catch(function () { }) : null; })
     .then(function () {
-      wire();
-      if (window.PMUI) PMUI.wire();
-      show('home');
+      redraw();
       if (!Store.questions.length) {
         toast('問題データを設定画面から読み込んでください');
       }
+      // 午後は42MBあるので待たない。終わったら今の画面だけ描き直す
+      if (window.PM) PM.init().then(redraw).catch(function () { });
     })
     .catch(function (e) {
       document.querySelector('main').innerHTML =

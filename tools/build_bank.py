@@ -35,6 +35,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sw_cache import stamp_sw  # noqa: E402
 from ap_fields import GROUP, NAME  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -315,12 +316,8 @@ def write_outputs(results: list[dict]) -> None:
     if OUT_JS.exists():
         OUT_JS.unlink()
 
-    if SW.exists():
-        src = SW.read_text(encoding="utf-8")
-        new = re.sub(r"const CACHE = '[^']*';",
-                     f"const CACHE = 'ap-study-{payload['stamp']}';", src, count=1)
-        if new != src:
-            SW.write_text(new, encoding="utf-8")
+    # キャッシュ名はデータの版番号＋アプリ本体の内容から決める（tools/sw_cache.py）
+    stamp_sw(SW.parent, payload["stamp"])
 
     mb = OUT_JSON.stat().st_size / 1024 / 1024
     print(f"\n  app/data/questions.json  {mb:.1f} MB  ({len(questions)} 問 / {len(exams)} 回)")
