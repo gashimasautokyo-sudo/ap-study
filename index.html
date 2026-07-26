@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="応用情報">
+<meta name="mobile-web-app-capable" content="yes">
+<title>応用情報 過去問</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1 id="title">応用情報 過去問</h1>
+  <span class="spacer"></span>
+  <span class="sub" id="topSub"></span>
+</header>
+
+<main>
+  <!-- ========== ホーム ========== -->
+  <section class="view active" id="view-home">
+    <div class="card">
+      <div class="stat-row">
+        <div class="stat hero" style="flex:1 1 100%">
+          <div class="label">通算正答率</div>
+          <div class="value" id="hRate">—</div>
+        </div>
+      </div>
+      <div class="stat-row" style="margin-top:10px">
+        <div class="stat"><div class="label">回答した問題</div><div class="value" id="hAnswered">0</div></div>
+        <div class="stat"><div class="label">未克服の誤答</div><div class="value" id="hUnresolved">0</div></div>
+        <div class="stat"><div class="label">総回答数</div><div class="value" id="hAttempts">0</div></div>
+      </div>
+    </div>
+
+    <div class="card" id="resumeCard" hidden>
+      <h2>中断した出題があります</h2>
+      <p class="hint" id="resumeInfo"></p>
+      <div class="btn-row">
+        <button class="btn primary" id="btnResume">再開する</button>
+        <button class="btn" id="btnDiscard">破棄</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>すぐ始める</h2>
+      <div class="btn-row">
+        <button class="btn primary wide" id="btnQuickReview">未克服の誤答をやり直す（<span id="qReviewN">0</span>問）</button>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn" id="btnQuickRandom">ランダム20問</button>
+        <button class="btn" id="btnQuickNew">未回答から20問</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>登録データ</h2>
+      <div id="bankInfo" class="hint"></div>
+      <div class="btn-row">
+        <button class="btn small" id="btnGoImport">問題データを追加／差し替え</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 出題設定 ========== -->
+  <section class="view" id="view-setup">
+    <div class="card">
+      <h2>出題モード</h2>
+      <div class="chips" id="modeChips">
+        <button class="chip" data-mode="exam" aria-pressed="true">試験回で指定</button>
+        <button class="chip" data-mode="field" aria-pressed="false">分野で指定</button>
+        <button class="chip" data-mode="review" aria-pressed="false">誤答の復習</button>
+        <button class="chip" data-mode="mock" aria-pressed="false">模試（80問150分）</button>
+      </div>
+    </div>
+
+    <div class="card" id="secExam">
+      <h2>試験回</h2>
+      <p class="hint">複数選択できます。未選択なら全回が対象です。</p>
+      <div class="btn-row" style="margin-bottom:8px">
+        <button class="btn small" data-sel="exam-all">すべて選択</button>
+        <button class="btn small" data-sel="exam-none">選択解除</button>
+      </div>
+      <div class="chips" id="examChips"></div>
+    </div>
+
+    <div class="card" id="secField">
+      <h2>分野</h2>
+      <p class="hint">未選択なら全分野が対象です。分野は自動分類のため、問題画面から個別に直せます。</p>
+      <div class="btn-row" style="margin-bottom:8px">
+        <button class="btn small" data-sel="field-all">すべて選択</button>
+        <button class="btn small" data-sel="field-none">選択解除</button>
+      </div>
+      <div id="fieldChips"></div>
+    </div>
+
+    <div class="card" id="secReview">
+      <h2>復習の範囲</h2>
+      <div class="chips" id="scopeChips">
+        <button class="chip" data-scope="unresolved" aria-pressed="true">未克服（最後に間違えた）</button>
+        <button class="chip" data-scope="ever" aria-pressed="false">過去に一度でも間違えた</button>
+        <button class="chip" data-scope="starred" aria-pressed="false">★を付けた問題</button>
+      </div>
+    </div>
+
+    <div class="card" id="secMock">
+      <h2>模試</h2>
+      <p class="hint">本番形式で 80 問を通しで解き、最後に一括採点します。制限時間 150 分（残り時間は画面上部に表示）。</p>
+      <div class="field-row">
+        <label for="mockExam">出題元</label>
+        <select id="mockExam"></select>
+      </div>
+    </div>
+
+    <div class="card" id="secOpts">
+      <h2>出題オプション</h2>
+      <div class="field-row">
+        <label for="optScope">対象</label>
+        <select id="optScope">
+          <option value="all">すべての問題</option>
+          <option value="unanswered">まだ解いていない問題だけ</option>
+          <option value="unresolved">未克服の誤答だけ</option>
+          <option value="ever">過去に間違えた問題だけ</option>
+          <option value="starred">★を付けた問題だけ</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <label for="optOrder">出題順</label>
+        <select id="optOrder">
+          <option value="random">シャッフル</option>
+          <option value="no">試験回・問番号順</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <label for="optCount">出題数</label>
+        <select id="optCount">
+          <option value="10">10問</option>
+          <option value="20" selected>20問</option>
+          <option value="30">30問</option>
+          <option value="50">50問</option>
+          <option value="80">80問</option>
+          <option value="0">対象すべて</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <label for="optImmediate">1問ごとに答え合わせ</label>
+        <span class="switch"><input type="checkbox" id="optImmediate" checked></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="hint" id="poolInfo"></p>
+      <button class="btn primary wide" id="btnStart">出題を開始</button>
+    </div>
+  </section>
+
+  <!-- ========== 出題中 ========== -->
+  <section class="view" id="view-quiz">
+    <div class="progress"><i id="qProg"></i></div>
+    <div class="card">
+      <div class="q-meta" id="qMeta"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-fig" id="qFig"></div>
+      <div class="choices" id="qChoices"></div>
+      <div class="verdict" id="qVerdict" hidden></div>
+      <div class="explain" id="qExplain" hidden></div>
+      <div id="qNoteWrap" hidden style="margin-top:12px">
+        <h2 style="font-size:13px;color:var(--text-2);margin:0 0 6px">自分用メモ</h2>
+        <textarea id="qNote" placeholder="なぜ間違えたか・覚え方などを残しておくと、復習のときに読み返せます。"></textarea>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="btn small" id="btnSaveNote">メモを保存</button>
+          <select id="qFieldSel" style="max-width:60%"></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn" id="btnPrev">前へ</button>
+        <button class="btn" id="btnStar">★</button>
+        <button class="btn primary" id="btnNext">次へ</button>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn small" id="btnFinish">採点して終了</button>
+        <button class="btn small" id="btnQuit">中断してホームへ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 結果 ========== -->
+  <section class="view" id="view-result">
+    <div class="card">
+      <div class="stat hero">
+        <div class="label" id="rTitle">結果</div>
+        <div class="value" id="rRate">—</div>
+      </div>
+      <div class="stat-row" style="margin-top:10px">
+        <div class="stat"><div class="label">正答</div><div class="value" id="rCorrect">0</div></div>
+        <div class="stat"><div class="label">出題数</div><div class="value" id="rCount">0</div></div>
+        <div class="stat"><div class="label">所要時間</div><div class="value" id="rTime">—</div></div>
+      </div>
+      <p class="hint" style="margin:10px 0 0" id="rNote"></p>
+    </div>
+    <div class="card">
+      <h2>この回の内訳</h2>
+      <div class="list" id="rList"></div>
+    </div>
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn primary" id="btnRetryWrong">間違えた問題だけやり直す</button>
+        <button class="btn" id="btnResultHome">ホームへ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 復習（誤答リスト） ========== -->
+  <section class="view" id="view-review">
+    <div class="card">
+      <h2>振り返る範囲</h2>
+      <div class="chips" id="revScopeChips">
+        <button class="chip" data-scope="unresolved" aria-pressed="true">未克服 <span class="n" id="nUnresolved"></span></button>
+        <button class="chip" data-scope="ever" aria-pressed="false">過去の誤答 <span class="n" id="nEver"></span></button>
+        <button class="chip" data-scope="starred" aria-pressed="false">★ <span class="n" id="nStarred"></span></button>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn primary wide" id="btnReviewStart">この範囲で出題する</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>一覧（タップで問題と自分のメモを表示）</h2>
+      <div class="list" id="revList"></div>
+    </div>
+  </section>
+
+  <!-- ========== 問題詳細（復習リストから） ========== -->
+  <section class="view" id="view-detail">
+    <div class="card">
+      <div class="q-meta" id="dMeta"></div>
+      <div class="q-text" id="dText"></div>
+      <div class="q-fig" id="dFig"></div>
+      <div class="choices" id="dChoices"></div>
+      <div class="explain" id="dExplain" hidden></div>
+    </div>
+    <div class="card">
+      <h2>自分用メモ</h2>
+      <textarea id="dNote"></textarea>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn small" id="dSaveNote">メモを保存</button>
+        <button class="btn small" id="dStar">★を切り替え</button>
+        <select id="dFieldSel" style="max-width:60%"></select>
+      </div>
+    </div>
+    <div class="card">
+      <button class="btn wide" id="dBack">一覧に戻る</button>
+    </div>
+  </section>
+
+  <!-- ========== 統計 ========== -->
+  <section class="view" id="view-stats">
+    <div class="card">
+      <h2>分野別の正答率</h2>
+      <p class="hint">正答率の低い分野が上に並びます。3回以上解いて60%未満の分野に「弱点」を付けています。</p>
+      <div id="fieldChart"></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn small" id="btnFieldTable">表で見る</button>
+        <button class="btn small" id="btnFieldStudy">弱点分野から出題する</button>
+      </div>
+      <div id="fieldTable" hidden style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h2>試験回別の正答率</h2>
+      <div id="examChart"></div>
+    </div>
+    <div class="card">
+      <h2>模試・セッション履歴</h2>
+      <div class="list" id="sessList"></div>
+    </div>
+  </section>
+
+  <!-- ========== 設定 ========== -->
+  <section class="view" id="view-settings">
+    <div class="card">
+      <h2>問題データ</h2>
+      <p class="hint" id="setBankInfo"></p>
+      <p class="hint">通常は起動時に <code>data/version.json</code> を見て自動更新されます。手動で入れ替えるときは <code>tools/build_bank.py</code> が作った <code>questions.json</code> を読み込んでください。同じ問題 ID は上書きされ、学習履歴は消えません。</p>
+      <p class="hint" id="setSyncMsg" hidden></p>
+      <div class="btn-row">
+        <button class="btn" id="btnPickBank">questions.json を読み込む</button>
+      </div>
+      <input type="file" id="fileBank" accept=".json,application/json" hidden>
+    </div>
+
+    <div class="card">
+      <h2>学習履歴のバックアップ</h2>
+      <p class="hint">端末を変えるとき・アプリを消す前に書き出しておいてください。書き出しも読み込みもオフラインで完結します。</p>
+      <div class="btn-row">
+        <button class="btn" id="btnExport">書き出す</button>
+        <button class="btn" id="btnPickProgress">読み込む</button>
+      </div>
+      <input type="file" id="fileProgress" accept=".json,application/json" hidden>
+    </div>
+
+    <div class="card">
+      <h2>表示</h2>
+      <div class="field-row">
+        <label for="setTheme">テーマ</label>
+        <select id="setTheme">
+          <option value="auto">端末に合わせる</option>
+          <option value="light">ライト</option>
+          <option value="dark">ダーク</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>リセット</h2>
+      <p class="hint">戻せません。必要ならバックアップを取ってから実行してください。</p>
+      <div class="btn-row">
+        <button class="btn" id="btnResetProgress">学習履歴だけ消す</button>
+        <button class="btn" id="btnResetAll">全部消す</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>オフライン</h2>
+      <p class="hint" id="swInfo"></p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button data-tab="home" aria-current="page"><span class="ic">🏠</span>ホーム</button>
+  <button data-tab="setup"><span class="ic">✏️</span>出題</button>
+  <button data-tab="review"><span class="ic">🔁</span>復習</button>
+  <button data-tab="stats"><span class="ic">📊</span>統計</button>
+  <button data-tab="settings"><span class="ic">⚙️</span>設定</button>
+</nav>
+
+<div id="toast"></div>
+
+<script src="js/fields.js"></script>
+<script src="js/db.js"></script>
+<script src="js/store.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
