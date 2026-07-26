@@ -1,0 +1,11 @@
+# 中間生成物（元PDFから再生成できる。合計 130MB 以上あるので入れない）
+work/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
