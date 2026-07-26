@@ -50,13 +50,16 @@
     for (let i = 0; i < btns.length; i++) {
       const t = btns[i].getAttribute('data-tab');
       const on = (t === tab) || (tab === 'quiz' && t === 'setup') ||
-        (tab === 'result' && t === 'setup') || (tab === 'detail' && t === 'review');
+        (tab === 'result' && t === 'setup') || (tab === 'detail' && t === 'review') ||
+        ((tab === 'pmsolve' || tab === 'pmreview') && t === 'pm');
       if (on) btns[i].setAttribute('aria-current', 'page');
       else btns[i].removeAttribute('aria-current');
     }
     window.scrollTo(0, 0);
     if (tab !== 'quiz') stopTimer();
+    if (tab !== 'pmsolve' && window.PMUI) PMUI.stopTimer();
 
+    if (tab === 'pm' && window.PMUI) PMUI.render();
     if (tab === 'home') renderHome();
     if (tab === 'setup') renderSetup();
     if (tab === 'review') renderReview();
@@ -832,10 +835,15 @@
 
   applyTheme(localStorage.getItem('ap-theme') || 'auto');
 
+  // 午後モジュールから画面遷移を呼べるようにする
+  window.AppHooks = { show: show, toast: toast };
+
   Store.init()
     .then(function () { return Quiz.restore(); })
+    .then(function () { return window.PM ? PM.init().catch(function () { }) : null; })
     .then(function () {
       wire();
+      if (window.PMUI) PMUI.wire();
       show('home');
       if (!Store.questions.length) {
         toast('問題データを設定画面から読み込んでください');
