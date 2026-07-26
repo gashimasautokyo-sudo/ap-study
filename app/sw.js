@@ -1,7 +1,7 @@
 /* オフライン用 Service Worker
    アプリ本体はキャッシュ優先（機内モードでも起動する）。
    問題データを差し替えたら CACHE の版番号を上げるか、設定画面から JSON を読み込む。 */
-const CACHE = 'ap-study-051b69b6ec35';
+const CACHE = 'ap-study-pm8c449c8fba83';
 
 const SHELL = [
   './',
@@ -12,16 +12,21 @@ const SHELL = [
   './js/db.js',
   './js/store.js',
   './js/quiz.js',
+  './js/pm.js',
   './js/chart.js',
   './js/app.js',
+  './js/pmui.js',
   './data/version.json',
+  './data/pm-version.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
 
-// data/questions.json は数MBあるので事前キャッシュしない。
-// 初回だけ取得して IndexedDB に入れ、そのあとキャッシュから削除する（store.js 側）。
-const NETWORK_FIRST = ['data/version.json'];
+// data/questions.json と data/pm.json は数十MBあるので事前キャッシュしない。
+// 初回だけ取得して IndexedDB に入れ、そのあとキャッシュから削除する（store.js / pm.js 側）。
+// 版番号の2つは必ずネットワークを先に見る。ここをキャッシュ優先にすると
+// データを差し替えても端末が古いままになる。
+const NETWORK_FIRST = ['data/version.json', 'data/pm-version.json'];
 
 self.addEventListener('install', function (ev) {
   ev.waitUntil(

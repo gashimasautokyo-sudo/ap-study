@@ -293,7 +293,10 @@ def write_outputs(results: list[dict]) -> None:
         "exams": exams,
         "questions": questions,
     }
-    body = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    # stamp は「中身が変わったか」を表す。生成時刻を混ぜると内容が同じでも毎回変わり、
+    # 端末が 10MB を再取得してしまうので generated は除いて取る。
+    body = json.dumps({k: v for k, v in payload.items() if k != "generated"},
+                      ensure_ascii=False, sort_keys=True)
     payload["stamp"] = hashlib.sha1(body.encode("utf-8")).hexdigest()[:12]
 
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)

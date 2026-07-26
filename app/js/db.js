@@ -3,7 +3,7 @@
   'use strict';
 
   const DB_NAME = 'ap-study';
-  const DB_VER = 2;
+  const DB_VER = 3;
   let _db = null;
 
   function open() {
@@ -43,6 +43,20 @@
         // 図表画像は問題本体から切り離して置く（問題一覧をメモリに常駐させても軽いままにする）
         if (!db.objectStoreNames.contains('figures')) {
           db.createObjectStore('figures', { keyPath: 'qid' });
+        }
+        // ---- 午後（記述式）----
+        if (!db.objectStoreNames.contains('pmExams')) {
+          db.createObjectStore('pmExams', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('pmSections')) {
+          const s = db.createObjectStore('pmSections', { keyPath: 'id' });
+          s.createIndex('examId', 'examId', { unique: false });
+          s.createIndex('field', 'field', { unique: false });
+        }
+        // 大問ごとの解答・自己採点。sid = 大問ID
+        if (!db.objectStoreNames.contains('pmState')) {
+          const s = db.createObjectStore('pmState', { keyPath: 'sid' });
+          s.createIndex('lastTs', 'lastTs', { unique: false });
         }
         void ev;
       };
