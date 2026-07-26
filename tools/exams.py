@@ -68,8 +68,9 @@ def discover(pdf_dir: Path) -> dict[str, dict]:
 
 if __name__ == "__main__":
     import sys
-    d = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(
-        r"C:\Users\gashi\Desktop\応用情報技術者試験問題、回答")
+    if len(sys.argv) < 2:
+        sys.exit("使い方: py -3.12 tools/exams.py <IPAのPDFを置いたフォルダ>")
+    d = Path(sys.argv[1])
     ex = discover(d)
     print(f"{len(ex)} 回")
     for k, v in ex.items():
