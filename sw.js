@@ -1,7 +1,7 @@
 /* オフライン用 Service Worker
    アプリ本体はキャッシュ優先（機内モードでも起動する）。
    問題データを差し替えたら CACHE の版番号を上げるか、設定画面から JSON を読み込む。 */
-const CACHE = 'ap-study-8c449c8fba83-d3ec2dfb';
+const CACHE = 'ap-study-8c449c8fba83-273d65b2';
 
 const SHELL = [
   './',

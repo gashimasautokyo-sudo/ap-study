@@ -351,13 +351,15 @@
 
     /* ---------- バックアップ ---------- */
 
+    // 午後の解答・自己採点（pmState）も履歴の一部。schema 2 から含める
     exportProgress: function () {
       return Promise.all([
-        DB.getAll('qstate'), DB.getAll('attempts'), DB.getAll('sessions')
+        DB.getAll('qstate'), DB.getAll('attempts'), DB.getAll('sessions'),
+        DB.getAll('pmState')
       ]).then(function (r) {
         return {
-          kind: 'ap-study-progress', schema: 1, exportedAt: new Date().toISOString(),
-          qstate: r[0], attempts: r[1], sessions: r[2]
+          kind: 'ap-study-progress', schema: 2, exportedAt: new Date().toISOString(),
+          qstate: r[0], attempts: r[1], sessions: r[2], pmState: r[3]
         };
       });
     },
@@ -366,7 +368,10 @@
       if (!obj || obj.kind !== 'ap-study-progress') {
         return Promise.reject(new Error('学習履歴のバックアップファイルではありません。'));
       }
-      return DB.clear(['qstate', 'attempts', 'sessions'])
+      // schema 1 のファイルには pmState が無い。そのときは午後の記録を消さずに残す
+      const hasPm = Object.prototype.hasOwnProperty.call(obj, 'pmState');
+      const stores = ['qstate', 'attempts', 'sessions'].concat(hasPm ? ['pmState'] : []);
+      return DB.clear(stores)
         .then(function () { return DB.putAll('qstate', obj.qstate || []); })
         .then(function () {
           const at = (obj.attempts || []).map(function (a) {
@@ -380,19 +385,28 @@
           });
           return DB.putAll('sessions', ss);
         })
-        .then(function () { return Store.reload(); });
+        .then(function () {
+          // pmState は sid が主キーなので、そのまま入れれば復元できる
+          return hasPm ? DB.putAll('pmState', obj.pmState || []) : null;
+        })
+        .then(function () { return Store.reload(); })
+        .then(function () { return window.PM ? PM.reload() : null; });
     },
 
     resetProgress: function () {
-      return DB.clear(['qstate', 'attempts', 'sessions'])
+      return DB.clear(['qstate', 'attempts', 'sessions', 'pmState'])
         .then(function () { return DB.setMeta('activeSession', null); })
-        .then(function () { return Store.reload(); });
+        .then(function () { return Store.reload(); })
+        .then(function () { return window.PM ? PM.reload() : null; });
     },
 
     resetAll: function () {
-      return DB.clear(['qstate', 'attempts', 'sessions', 'questions', 'exams', 'meta'])
+      return DB.clear(['qstate', 'attempts', 'sessions', 'pmState',
+                       'questions', 'exams', 'meta', 'figures',
+                       'pmExams', 'pmSections'])
         .then(function () { return Store._syncBundled(); })
-        .then(function () { return Store.reload(); });
+        .then(function () { return Store.reload(); })
+        .then(function () { return window.PM ? PM.init() : null; });
     }
   };
 

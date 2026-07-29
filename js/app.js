@@ -789,7 +789,7 @@
     });
     $('setTheme').addEventListener('change', function () { applyTheme(this.value); });
     $('btnResetProgress').addEventListener('click', function () {
-      if (!confirm('学習履歴（誤答・メモ・統計）を全部消します。よろしいですか？')) return;
+      if (!confirm('学習履歴（午前の誤答・メモ・統計、午後の解答と自己採点）を全部消します。よろしいですか？')) return;
       Store.resetProgress().then(function () { toast('消去しました'); renderSettings(); });
     });
     $('btnResetAll').addEventListener('click', function () {
