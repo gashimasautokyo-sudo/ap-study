@@ -256,7 +256,9 @@
     const st = Store.stateOf(q.id);
     const meta = $('qMeta');
     meta.innerHTML = '';
+    // IPA が示す出典の形（回・時間区分・問番号）に合わせる
     meta.appendChild(el('span', 'tag', Quiz.examLabel(q.examId)));
+    meta.appendChild(el('span', 'tag', '午前'));
     meta.appendChild(el('span', 'tag', '問' + q.no));
     meta.appendChild(el('span', 'tag', Store.fieldLabel(q)));
     meta.appendChild(el('span', null, (s.idx + 1) + ' / ' + s.qids.length));
@@ -307,7 +309,8 @@
     const t = (q && q.explanation ? String(q.explanation) : '').trim();
     if (!t) { host.hidden = true; host.innerHTML = ''; return; }
     host.innerHTML = '';
-    host.appendChild(el('b', null, '解説'));
+    // IPA の解説だと誤解されないよう、出所をその場で示す
+    host.appendChild(el('b', null, '解説（このアプリが独自に作成／IPA によるものではありません）'));
     host.appendChild(document.createTextNode(t));
     host.hidden = false;
   }
@@ -499,7 +502,9 @@
 
     const meta = $('dMeta');
     meta.innerHTML = '';
+    // IPA が示す出典の形（回・時間区分・問番号）に合わせる
     meta.appendChild(el('span', 'tag', Quiz.examLabel(q.examId)));
+    meta.appendChild(el('span', 'tag', '午前'));
     meta.appendChild(el('span', 'tag', '問' + q.no));
     meta.appendChild(el('span', 'tag', Store.fieldLabel(q)));
     meta.appendChild(el('span', null, '○' + st.correctCount + ' ×' + st.wrongCount));
